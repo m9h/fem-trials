@@ -62,6 +62,24 @@ MUMPS/METIS (the DGX Spark's 120 GB) and to nothing feasible with MMD.
    and from `analyze(ordering="scotch")` (MUMPS 5.7.3 + scotch 7.0.10); `auto`, `amd`
    and `metis` work.
 
+### DGX Spark follow-up (2026-10-26, gx10-dgx-spark, aarch64, 20 cores, 120 GB shared)
+
+Same scripts in the same `Containerfile` built for aarch64 on Docker (plus a derived image with
+`python3-mumps` from the COPR; python-mumps 0.0.6, MUMPS 5.7.3, FlexiBLAS → OpenBLAS-OpenMP).
+The complex path works unchanged; metis and auto orderings run (the scotch abort was not retried).
+
+| dofs | SuperLU_DIST in dolfinx (MMD) | python-mumps metis, 1 thread | 4 threads | 8 threads | 16 threads |
+|---|---|---|---|---|---|
+| 68,921 | 36.7 s, 4.66 GB | 15.1 s factor, 0.17 s solve, 1.19 GB | 10.3 s / 0.61 s | | 35.1 s / 6.3 s |
+| 357,911 | not tried | 268 s factor, 1.2 s solve, 10.3 GB | 210 s / 2.7 s | 255 s / 8.6 s | |
+| 1,030,301 | | matrix dumped (15.2 M nnz, 1.9 GB RSS to assemble); solve deferred: ~40 GB needed, host had 35 GB free behind another job | | | |
+
+Memory matches the laptop (10.3 GB at 358k dofs vs 7.2 GB at 275k), so the 1e6-dof estimate of
+~40 GB stands. Time does not: the Grace cores factor 6-8× slower than the laptop's x86 cores, and
+OpenBLAS threading makes it worse beyond 4 threads (the solve phase is 40× slower at 16 threads
+than at 1), so run MUMPS here with `OMP_NUM_THREADS=4`. NETLIB BLAS is 5× slower again (76 s at
+68k). Budget the 1e6-dof Helmholtz at 15-25 min and 40 GB on the Spark.
+
 ### Fedora bug drafts (nothing filed)
 
 **superlu_dist-openmpi 8.2.0-10: METIS column ordering unusable.** Selecting
