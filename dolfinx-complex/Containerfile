@@ -1,0 +1,7 @@
+FROM registry.fedoraproject.org/fedora:44
+COPY mhough-neurofedora.repo /etc/yum.repos.d/
+RUN dnf -y --setopt=install_weak_deps=False install python3-dolfinx-openmpi python3-mpi4py-openmpi python3-numpy python3-scipy environment-modules gmsh python3-gmsh python3-h5py time gcc gcc-c++ python3-devel fenics-basix-devel fenics-dolfinx-openmpi-devel ufcx-devel \
+    && dnf clean all
+ENV MODULEPATH=/etc/modulefiles:/usr/share/modulefiles
+WORKDIR /work
+ENTRYPOINT ["/bin/bash", "-lc"]
