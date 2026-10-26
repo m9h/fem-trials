@@ -72,13 +72,16 @@ The complex path works unchanged; metis and auto orderings run (the scotch abort
 |---|---|---|---|---|---|
 | 68,921 | 36.7 s, 4.66 GB | 15.1 s factor, 0.17 s solve, 1.19 GB | 10.3 s / 0.61 s | | 35.1 s / 6.3 s |
 | 357,911 | not tried | 268 s factor, 1.2 s solve, 10.3 GB | 210 s / 2.7 s | 255 s / 8.6 s | |
-| 1,030,301 | | matrix dumped (15.2 M nnz, 1.9 GB RSS to assemble); solve deferred: ~40 GB needed, host had 35 GB free behind another job | | | |
+| 1,030,301 | not tried | (matrix: 15.2 M nnz, 1.9 GB to assemble) | **1481 s factor, 23 s solve, 42.0 GB** | | |
 
-Memory matches the laptop (10.3 GB at 358k dofs vs 7.2 GB at 275k), so the 1e6-dof estimate of
-~40 GB stands. Time does not: the Grace cores factor 6-8× slower than the laptop's x86 cores, and
-OpenBLAS threading makes it worse beyond 4 threads (the solve phase is 40× slower at 16 threads
-than at 1), so run MUMPS here with `OMP_NUM_THREADS=4`. NETLIB BLAS is 5× slower again (76 s at
-68k). Budget the 1e6-dof Helmholtz at 15-25 min and 40 GB on the Spark.
+Memory matches the laptop (10.3 GB at 358k dofs vs 7.2 GB at 275k) and the 1e6-dof case
+landed at 42 GB, as extrapolated. Time does not: the Grace cores factor 6-8× slower than the
+laptop's x86 cores, and OpenBLAS threading makes it worse beyond 4 threads (the solve phase is
+40× slower at 16 threads than at 1), so run MUMPS here with `OMP_NUM_THREADS=4`. NETLIB BLAS is
+5× slower again (76 s at 68k). The 1e6-dof Helmholtz is therefore feasible on the Spark at
+25 min and 42 GB per factorisation, with re-solves at 23 s, under a `--memory=48g` cap
+(the same job was lost once to a client-side SIGTERM through `docker run --rm`'s signal proxy;
+run it detached, `docker run -d`, and `docker wait`).
 
 ### Fedora bug drafts (nothing filed)
 
